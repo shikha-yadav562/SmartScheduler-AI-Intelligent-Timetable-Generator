@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SmartScheduler AI — Intelligent Timetable Generator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;700&family=Roboto:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+[data-theme="light"]{
+  --bg:#f0f4f9;--card:#fff;--surf:#f8faff;--inp:#f1f3f9;
+  --bd:#dde3f0;--div:#e8ecf4;
+  --acc:#4f46e5;--acch:#3730a3;--acclt:#eef2ff;--accmu:#c7d2fe;--accring:rgba(79,70,229,.16);
+  --t1:#1f2937;--t2:#4b5563;--t3:#9ca3af;--t4:#d1d5db;--th:#1a1a2e;--on-acc:#fff;
+  --grn:#059669;--grn-bg:#ecfdf5;--grn-bd:#a7f3d0;
+  --amb:#d97706;--amb-bg:#fffbeb;--amb-bd:#fde68a;
+  --red:#dc2626;--red-bg:#fef2f2;--red-bd:#fecaca;
+  --tl:#0891b2;--tl-bg:#ecfeff;--tl-bd:#a5f3fc;
+  --vio:#7c3aed;--vio-bg:#f5f3ff;--vio-bd:#ddd6fe;
+  --nav:rgba(255,255,255,.96);--nav-bd:#e2e8f0;
+  --sh1:0 1px 3px rgba(0,0,0,.08);--sh2:0 4px 16px rgba(79,70,229,.1);
+  --sh3:0 8px 32px rgba(0,0,0,.12);--shacc:0 4px 20px rgba(79,70,229,.22);
+  --scr:#c7d2fe;
+}
+[data-theme="dark"]{
+  --bg:#0d0d1c;--card:#141428;--surf:#191932;--inp:#1e1e38;
+  --bd:rgba(255,255,255,.09);--div:rgba(255,255,255,.06);
+  --acc:#818cf8;--acch:#6366f1;--acclt:rgba(99,102,241,.14);--accmu:rgba(129,140,248,.4);--accring:rgba(99,102,241,.22);
+  --t1:#e2e0ff;--t2:#9090c0;--t3:#55557a;--t4:#333358;--th:#f0efff;--on-acc:#0d0d1c;
+  --grn:#4ade80;--grn-bg:rgba(74,222,128,.1);--grn-bd:rgba(74,222,128,.3);
+  --amb:#fbbf24;--amb-bg:rgba(251,191,36,.1);--amb-bd:rgba(251,191,36,.3);
+  --red:#f87171;--red-bg:rgba(248,113,113,.1);--red-bd:rgba(248,113,113,.3);
+  --tl:#22d3ee;--tl-bg:rgba(34,211,238,.1);--tl-bd:rgba(34,211,238,.3);
+  --vio:#a78bfa;--vio-bg:rgba(167,139,250,.1);--vio-bd:rgba(167,139,250,.3);
+  --nav:rgba(13,13,28,.95);--nav-bd:rgba(255,255,255,.07);
+  --sh1:0 1px 3px rgba(0,0,0,.4);--sh2:0 4px 20px rgba(0,0,0,.5);
+  --sh3:0 8px 40px rgba(0,0,0,.6);--shacc:0 4px 24px rgba(99,102,241,.4);
+  --scr:#2e2e58;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Roboto',sans-serif;font-size:13.5px;line-height:1.6;background:var(--bg);color:var(--t1);min-height:100vh;overflow:hidden;transition:background .25s,color .25s}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--scr);border-radius:4px}
+
+/* NAVBAR */
+#nav{position:fixed;top:0;left:0;right:0;z-index:200;height:54px;background:var(--nav);border-bottom:1px solid var(--nav-bd);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;padding:0 16px;gap:10px;box-shadow:var(--sh1);}
+.logo{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.logo-ico{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#4f46e5,#0891b2);display:flex;align-items:center;justify-content:center;box-shadow:var(--shacc);flex-shrink:0;}
+.logo-txt{font-family:'Google Sans Display',sans-serif;font-size:15px;font-weight:700;color:var(--th);}
+.logo-txt em{font-style:normal;color:var(--acc);}
+.n-sep{width:1px;height:20px;background:var(--bd);flex-shrink:0;}
+.n-mid{display:flex;align-items:center;gap:5px;flex:1;flex-wrap:wrap;}
+.n-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.live-pill{display:none;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:600;background:var(--grn-bg);border:1px solid var(--grn-bd);color:var(--grn);white-space:nowrap;}
+.live-pill.on{display:flex;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.theme-sw{display:flex;align-items:center;gap:2px;padding:3px;background:var(--inp);border:1px solid var(--bd);border-radius:22px;cursor:pointer;}
+.theme-sw button{width:28px;height:26px;border-radius:20px;border:none;cursor:pointer;font-size:13px;background:transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.theme-sw button.on{background:var(--card);box-shadow:var(--sh1);}
+
+/* LAYOUT */
+#app{position:fixed;top:54px;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+.col{overflow-y:auto;overflow-x:hidden;padding:14px;display:flex;flex-direction:column;gap:12px;}
+#lcol{border-right:1px solid var(--div);}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh1);transition:background .25s,border .25s;}
+.chd{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--div);}
+.ctit{font-family:'Google Sans',sans-serif;font-size:13px;font-weight:600;color:var(--th);}
+.cbod{padding:13px 14px;}
+
+/* INPUTS */
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t2);}
+.inp{width:100%;padding:7px 10px;border-radius:8px;font-size:13px;font-family:'Roboto',sans-serif;background:var(--inp);border:1.5px solid var(--bd);color:var(--t1);outline:none;-webkit-appearance:none;-moz-appearance:none;appearance:none;transition:border .18s,box-shadow .18s,background .18s;}
+.inp:focus{border-color:var(--acc);background:var(--card);box-shadow:0 0 0 3px var(--accring);}
+.inp::placeholder{color:var(--t3);}
+select.inp{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px;}
+select.inp option{background:var(--card);color:var(--t1);}
+input[type=number].inp{-moz-appearance:textfield;appearance:textfield;}
+input[type=number].inp::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;}
+
+/* TYPE CHIPS */
+.type-chip{flex:1;padding:9px 4px;text-align:center;font-size:12px;font-weight:600;border-radius:10px;cursor:pointer;color:var(--t2);border:1.5px solid var(--bd);background:var(--surf);transition:all .2s;user-select:none;}
+.type-chip:hover{color:var(--t1);border-color:var(--accmu);}
+.type-chip.on{background:var(--acclt);color:var(--acc);border-color:var(--acc);box-shadow:0 0 0 3px var(--accring);}
+
+/* DAY CHIPS */
+.day-chip{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--bd);display:flex;align-items:center;justify-content:center;font-family:'Google Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--t2);transition:all .18s;flex-shrink:0;user-select:none;}
+.day-chip:hover{border-color:var(--accmu);color:var(--acc);}
+.day-chip.on{background:var(--acc);color:var(--on-acc);border-color:var(--acc);box-shadow:0 2px 8px var(--accring);}
+
+/* TABS */
+.tabbar{display:flex;gap:3px;padding:4px;background:var(--inp);border:1px solid var(--bd);border-radius:12px;}
+.tabbtn{flex:1;padding:7px 8px;border-radius:9px;border:none;cursor:pointer;font-family:'Google Sans',sans-serif;font-size:12px;font-weight:500;background:transparent;color:var(--t2);transition:all .18s;display:flex;align-items:center;justify-content:center;gap:4px;}
+.tabbtn:hover{color:var(--t1);}
+.tabbtn.on{background:var(--card);color:var(--acc);box-shadow:var(--sh1);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:7px 13px;border-radius:8px;font-family:'Google Sans',sans-serif;font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.btn:active{transform:scale(.97)!important;}
+.btn:disabled{opacity:.38;pointer-events:none;}
+.btn-pri{background:var(--acc);color:var(--on-acc);box-shadow:var(--shacc);}
+.btn-pri:hover{background:var(--acch);transform:translateY(-1px);}
+.btn-ton{background:var(--acclt);color:var(--acc);border:1px solid var(--accmu);}
+.btn-ton:hover{background:var(--accmu);}
+.btn-out{background:transparent;color:var(--t2);border:1.5px solid var(--bd);}
+.btn-out:hover{background:var(--surf);color:var(--t1);border-color:var(--accmu);}
+.btn-grn{background:var(--grn-bg);color:var(--grn);border:1px solid var(--grn-bd);}
+.btn-amb{background:var(--amb-bg);color:var(--amb);border:1px solid var(--amb-bd);}
+.btn-tl{background:var(--tl-bg);color:var(--tl);border:1px solid var(--tl-bd);}
+.btn-xs{padding:4px 9px;font-size:11px;border-radius:6px;}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:7px;}
+.btn-full{width:100%;}
+#btn-gen{background:linear-gradient(135deg,#4f46e5,#0891b2);color:#fff;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;box-shadow:var(--shacc);border:none;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+#btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,70,229,.38);}
+#btn-gen:disabled{opacity:.4;pointer-events:none;}
+
+/* TOGGLE */
+.tog-w{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
+.tog-w>span{font-size:12px;color:var(--t2);}
+.tog{position:relative;width:36px;height:20px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tok{position:absolute;inset:0;border-radius:20px;background:var(--inp);border:1.5px solid var(--bd);transition:.22s;}
+.tob{position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--t3);transition:.22s;}
+.tog input:checked~.tok{background:var(--acclt);border-color:var(--acc);}
+.tog input:checked~.tob{transform:translateX(16px);background:var(--acc);}
+
+/* SUBJECT CARD — all fields fully visible */
+.subj-card{
+  background:var(--card);
+  border:2px solid var(--accmu);
+  border-radius:12px;
+  margin-bottom:2px;
+}
+.subj-card:hover{border-color:var(--acc);box-shadow:var(--sh2);}
+.s-bar{height:4px;border-radius:12px 12px 0 0;}
+.s-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;}
+/* Row: 3 equal cols + delete button — always visible */
+.s-row-3{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 32px;
+  gap:10px;
+  align-items:end;
+  width:100%;
+}
+/* Lab/extra row */
+.s-row-lab{
+  display:grid;
+  grid-template-columns:120px 110px 1fr;
+  gap:10px;
+  align-items:end;
+  width:100%;
+}
+/* Make every field label always visible */
+.field{display:flex;flex-direction:column;gap:5px;width:100%;}
+.field label{
+  display:block;
+  font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--acc);
+  white-space:nowrap;overflow:visible;
+}
+/* Override .inp inside subject cards for strong visibility */
+.subj-card .inp{
+  width:100%;
+  display:block;
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:13px;
+  font-family:'Roboto',sans-serif;
+  background:#ffffff;
+  border:1.5px solid #a5b4fc;
+  color:#1e1b4b;
+  outline:none;
+  box-sizing:border-box;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  transition:border .18s,box-shadow .18s;
+  min-width:0;
+}
+[data-theme="dark"] .subj-card .inp{
+  background:#1e1e38;
+  border-color:#4f46e5;
+  color:#e2e0ff;
+}
+.subj-card .inp:focus{
+  border-color:var(--acc);
+  box-shadow:0 0 0 3px var(--accring);
+}
+.subj-card .inp::placeholder{color:#9ca3af;}
+[data-theme="dark"] .subj-card .inp::placeholder{color:#55557a;}
+.subj-card select.inp{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 8px center;
+  background-color:#ffffff;
+  padding-right:26px;
+  cursor:pointer;
+}
+[data-theme="dark"] .subj-card select.inp{background-color:#1e1e38;}
+.subj-card select.inp option{background:var(--card);color:var(--t1);}
+.subj-card input[type=number].inp{-moz-appearance:textfield;appearance:textfield;}
+.subj-card input[type=number].inp::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;}
+.del{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--bd);background:transparent;cursor:pointer;color:var(--t3);font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;}
+.del:hover{background:var(--red-bg);border-color:var(--red-bd);color:var(--red);}
+
+/* TIMETABLE GRID */
+#tt-scroll{overflow:auto;}
+#tt-table{border-collapse:separate;border-spacing:3px;width:100%;min-width:520px;}
+#tt-table th{padding:9px 12px;font-family:'Google Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t2);background:var(--surf);border-radius:8px;white-space:nowrap;position:sticky;top:0;z-index:2;border:1px solid var(--bd);}
+#tt-table th:first-child{width:76px;}
+#tt-table td{padding:0;border-radius:8px;vertical-align:top;min-width:110px;transition:transform .18s,box-shadow .18s;}
+.c-empty{background:var(--surf);color:var(--t4);text-align:center;font-size:11px;padding:12px 4px;}
+.c-break{background:var(--grn-bg);border:1px solid var(--grn-bd);padding:10px 12px;color:var(--grn);text-align:center;font-weight:500;}
+.c-holiday{background:var(--amb-bg);border:1px solid var(--amb-bd);padding:10px 12px;color:var(--amb);text-align:center;font-weight:500;}
+.c-session,.c-lab,.c-extra{padding:9px 11px;cursor:default;position:relative;}
+.c-session:hover,.c-lab:hover,.c-extra:hover{transform:translateY(-2px);box-shadow:var(--sh2);z-index:1;}
+.cell-subj{font-family:'Google Sans',sans-serif;font-weight:600;font-size:12.5px;line-height:1.3;}
+.cell-teacher{font-size:11px;opacity:.55;margin-top:2px;}
+.cell-room{font-size:10.5px;margin-top:2px;font-family:'JetBrains Mono',monospace;opacity:.5;}
+.lab-badge{position:absolute;top:5px;right:6px;padding:1px 6px;border-radius:4px;font-size:9.5px;font-weight:700;background:rgba(0,0,0,.18);color:#fff;}
+.sub-badge{display:inline-block;margin-top:4px;padding:2px 7px;border-radius:5px;font-size:9.5px;font-weight:700;background:var(--amb-bg);border:1px solid var(--amb-bd);color:var(--amb);}
+.extra-badge{display:inline-block;margin-top:4px;padding:2px 7px;border-radius:5px;font-size:9.5px;font-weight:700;background:var(--tl-bg);border:1px solid var(--tl-bd);color:var(--tl);}
+
+/* STAT PILLS */
+.stat-pill{display:flex;flex-direction:column;align-items:center;padding:8px 14px;background:var(--surf);border:1px solid var(--bd);border-radius:10px;min-width:68px;}
+.sv{font-family:'Google Sans Display',sans-serif;font-size:20px;font-weight:700;line-height:1;}
+.sl{font-size:10px;color:var(--t2);margin-top:2px;text-transform:uppercase;letter-spacing:.05em;}
+
+/* CONFLICT PANEL */
+#conflict-panel{position:fixed;right:0;top:54px;bottom:0;width:310px;z-index:150;background:var(--card);border-left:1px solid var(--bd);padding:18px;display:flex;flex-direction:column;gap:12px;transform:translateX(100%);transition:transform .3s cubic-bezier(.34,1.4,.64,1);box-shadow:var(--sh3);overflow-y:auto;}
+#conflict-panel.open{transform:translateX(0);}
+
+/* MODAL */
+#modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
+#modal-bg.open{opacity:1;pointer-events:auto;}
+#modal-box{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:22px;width:100%;max-width:470px;box-shadow:var(--sh3);transform:translateY(18px);transition:transform .22s;}
+#modal-bg.open #modal-box{transform:translateY(0);}
+.modal-title{font-family:'Google Sans Display',sans-serif;font-size:16px;font-weight:700;color:var(--th);}
+.m-form{display:none;flex-direction:column;gap:13px;}
+
+/* CHAT */
+#chat-panel{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden;flex:1;min-height:280px;}
+#chat-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px;}
+.bub{max-width:88%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.6;word-break:break-word;}
+.bub-ai{align-self:flex-start;border-bottom-left-radius:4px;background:var(--acclt);color:var(--th);border:1px solid var(--accmu);}
+.bub-us{align-self:flex-end;border-bottom-right-radius:4px;background:var(--acc);color:white;}
+.bub b,.bub strong{font-weight:600;}
+.tdots{display:inline-flex;gap:3px;align-items:center;}
+.tdots span{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:td .9s ease-in-out infinite;}
+.tdots span:nth-child(2){animation-delay:.18s;}
+.tdots span:nth-child(3){animation-delay:.36s;}
+@keyframes td{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+.chat-row{display:flex;gap:6px;padding:9px 12px;border-top:1px solid var(--div);align-items:center;flex-shrink:0;}
+#chat-in{flex:1;padding:8px 12px;border-radius:20px;font-size:13px;background:var(--inp);border:1.5px solid var(--bd);color:var(--t1);outline:none;font-family:'Roboto',sans-serif;transition:all .18s;}
+#chat-in:focus{border-color:var(--acc);background:var(--card);}
+#chat-in::placeholder{color:var(--t3);}
+
+/* MISC */
+.spin{display:inline-block;width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:spin .6s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);padding:10px 20px;border-radius:12px;font-size:13px;font-weight:500;background:var(--card);border:1px solid var(--bd);color:var(--t1);box-shadow:var(--sh3);z-index:400;opacity:0;transition:all .25s;white-space:nowrap;max-width:92vw;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 24px;text-align:center;}
+.eico{width:64px;height:64px;border-radius:18px;background:var(--acclt);border:1.5px solid var(--accmu);display:flex;align-items:center;justify-content:center;}
+.fadeup{animation:fu .4s ease forwards;opacity:0;}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}
+@media(max-width:860px){ #app{grid-template-columns:1fr;overflow-y:auto;}#lcol{border-right:none;border-bottom:1px solid var(--div);overflow:visible;}#rcol{overflow:visible;}}
+@media print{ #nav,#lcol,#toast,#conflict-panel,#modal-bg{display:none!important;}#app{position:static;display:block;}#rcol{overflow:visible;}body{background:white!important;}}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="nav">
+  <div class="logo">
+    <div class="logo-ico">
+      <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2.5"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+      </svg>
+    </div>
+    <span class="logo-txt">SmartSchedule <em>AI</em></span>
+  </div>
+  <div class="n-sep"></div>
+  <div class="n-mid">
+    <button class="btn btn-ton btn-xs action-btn" onclick="openModal('leave')" disabled>✋ Leave</button>
+    <button class="btn btn-amb btn-xs action-btn" onclick="openModal('holiday')" disabled>🏖 Holiday</button>
+    <button class="btn btn-tl  btn-xs action-btn" onclick="openModal('extra')"   disabled>⚡ Extra</button>
+    <div class="n-sep"></div>
+    <button class="btn btn-out btn-xs action-btn" onclick="exportExcel()" disabled>📊 Excel</button>
+    <button class="btn btn-out btn-xs action-btn" onclick="doShot()"       disabled>📸 PNG</button>
+  </div>
+  <div class="n-right">
+    <div class="live-pill" id="livepill"><span class="ldot"></span>Live</div>
+    <div class="theme-sw">
+      <button id="tbl" class="on" onclick="setTheme('light')">☀️</button>
+      <button id="tbd"            onclick="setTheme('dark')">🌙</button>
+    </div>
+  </div>
+</nav>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- LEFT -->
+  <div class="col" id="lcol">
+
+    <div class="tabbar">
+      <button class="tabbtn on" id="t-setup" onclick="switchTab('setup')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Setup
+      </button>
+      <button class="tabbtn" id="t-chat" onclick="switchTab('chat')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>AI Chat
+      </button>
+    </div>
+
+    <!-- SETUP -->
+    <div id="pane-setup" style="display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Type -->
+      <div class="card fadeup">
+        <div class="chd"><span class="ctit">Schedule Type</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px;">
+          <div class="type-chip on" data-type="college"   onclick="setType('college')">🎓 College</div>
+          <div class="type-chip"   data-type="school"    onclick="setType('school')">📚 School</div>
+          <div class="type-chip"   data-type="corporate" onclick="setType('corporate')">🏢 Corporate</div>
+          <div class="type-chip"   data-type="custom"    onclick="setType('custom')">⚙️ Custom</div>
+        </div>
+      </div>
+
+      <!-- Days -->
+      <div class="card fadeup d1">
+        <div class="chd">
+          <span class="ctit">Working Days</span>
+          <button class="btn btn-out btn-xs" onclick="setMF()">Mon–Fri</button>
+        </div>
+        <div class="cbod">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;" id="daychips">
+            <div class="day-chip on" data-day="Monday">Mo</div>
+            <div class="day-chip on" data-day="Tuesday">Tu</div>
+            <div class="day-chip on" data-day="Wednesday">We</div>
+            <div class="day-chip on" data-day="Thursday">Th</div>
+            <div class="day-chip on" data-day="Friday">Fr</div>
+            <div class="day-chip"    data-day="Saturday">Sa</div>
+            <div class="day-chip"    data-day="Sunday">Su</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time -->
+      <div class="card fadeup d1">
+        <div class="chd"><span class="ctit">Time Settings</span></div>
+        <div class="cbod" style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div class="field"><label>Start</label><input id="s-start" type="time" class="inp" value="09:00"/></div>
+            <div class="field"><label>End</label>  <input id="s-end"   type="time" class="inp" value="17:00"/></div>
+            <div class="field"><label>Slot</label>
+              <select id="s-slot" class="inp">
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60" selected>1 hour</option>
+                <option value="90">90 min</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="field"><label>Break Start</label><input id="s-brk" type="time" class="inp" value="13:00"/></div>
+            <div class="field"><label>Break Length</label>
+              <select id="s-brk-dur" class="inp">
+                <option value="0">No break</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60" selected>1 hour</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subjects -->
+      <div class="card fadeup d2">
+        <div class="chd">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="ctit" id="subj-section-title">Subjects / Sessions</span>
+            <span id="subj-count" style="background:var(--acclt);color:var(--acc);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--accmu);">0</span>
+          </div>
+          <div style="display:flex;gap:5px;">
+            <button class="btn btn-out btn-xs" id="btn-ai" onclick="aiSuggest()">✨ AI Fill</button>
+            <button class="btn btn-ton btn-xs" onclick="addCard()">+ Add</button>
+          </div>
+        </div>
+        <div id="subj-list" style="padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;max-height:460px;overflow-y:auto;overflow-x:visible;"></div>
+      </div>
+
+      <button id="btn-gen" onclick="generate()">
+        <span id="gen-spin" class="spin" style="display:none;"></span>
+        <svg width="15" height="15" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Generate Timetable
+      </button>
+    </div>
+
+    <!-- CHAT -->
+    <div id="pane-chat" style="display:none;flex-direction:column;gap:10px;flex:1;">
+      <div id="chat-panel">
+        <div class="chd">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--tl));display:flex;align-items:center;justify-content:center;">
+              <svg width="13" height="13" fill="white" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <span class="ctit">SmartSchedule Assistant</span>
+          </div>
+          <div id="typing" style="display:none;align-items:center;gap:6px;">
+            <div class="tdots"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+        <div id="chat-log"></div>
+        <div class="chat-row">
+          <input id="chat-in" placeholder="Ask me anything…" onkeydown="if(event.key==='Enter')sendMsg()"/>
+          <button class="btn btn-pri btn-sm" onclick="sendMsg()" style="border-radius:20px;padding:7px 13px;">
+            <svg width="12" height="12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button class="btn btn-out btn-xs" onclick="sendQ('How do I set up college subjects?')">🎓 College setup</button>
+        <button class="btn btn-out btn-xs" onclick="sendQ('How do lab sessions work?')">🧪 Lab sessions</button>
+        <button class="btn btn-out btn-xs" onclick="sendQ('How to apply teacher leave?')">✋ Leave help</button>
+        <button class="btn btn-out btn-xs" onclick="sendQ('How to export my timetable?')">📊 Export</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="col" id="rcol">
+
+    <div id="empty" class="fadeup">
+      <div class="eico">
+        <svg width="30" height="30" fill="none" stroke="var(--acc)" stroke-width="1.5" stroke-linecap="round" viewBox="0 0 24 24">
+          <rect x="3" y="4" width="18" height="18" rx="2.5"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"/>
+        </svg>
+      </div>
+      <div>
+        <p style="font-family:'Google Sans Display';font-size:18px;font-weight:700;color:var(--th);margin-bottom:6px;">Your timetable will appear here</p>
+        <p style="font-size:13px;color:var(--t2);max-width:380px;margin:0 auto;line-height:1.7;">Add subjects on the left, configure days and times, then click <strong style="color:var(--acc);">Generate Timetable</strong>.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+        <div class="stat-pill"><span class="sv" style="color:var(--acc);">CSP</span><span class="sl">Algorithm</span></div>
+        <div class="stat-pill"><span class="sv" style="color:var(--tl);">Lab</span><span class="sl">Multi-slot</span></div>
+        <div class="stat-pill"><span class="sv" style="color:var(--grn);">Auto</span><span class="sl">Substitute</span></div>
+        <div class="stat-pill"><span class="sv" style="color:var(--vio);">AI</span><span class="sl">Explain</span></div>
+      </div>
+    </div>
+
+    <div id="tt-card" style="display:none;flex-direction:column;gap:14px;" class="card fadeup">
+      <div class="chd">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;" id="tt-stats"></div>
+        <button class="btn btn-out btn-sm" onclick="generate()">↻ Regenerate</button>
+      </div>
+      <div style="padding:0 14px;display:flex;gap:8px;flex-wrap:wrap;" id="tt-legend"></div>
+      <div style="padding:0 10px 10px;" id="tt-scroll"><table id="tt-table"></table></div>
+      <div style="margin:0 12px 12px;background:var(--acclt);border:1px solid var(--accmu);border-radius:12px;padding:13px 15px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--acc);"></div>
+          <span style="font-family:'Google Sans';font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--acc);">AI Explanation</span>
+        </div>
+        <p id="explanation" style="font-size:12.5px;line-height:1.75;color:var(--t2);"></p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONFLICT PANEL -->
+<div id="conflict-panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-family:'Google Sans';font-size:13.5px;font-weight:700;color:var(--th);">📋 Conflict Log</span>
+    <button class="btn btn-out btn-xs" onclick="document.getElementById('conflict-panel').classList.remove('open')">✕ Close</button>
+  </div>
+  <p style="font-size:12px;color:var(--t2);">Substitution results:</p>
+  <div id="conflict-log" style="flex:1;display:flex;flex-direction:column;gap:8px;"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-bg" onclick="closeModal(event)">
+<div id="modal-box">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <p class="modal-title" id="modal-title"></p>
+    <button class="btn btn-out btn-xs" onclick="closeModal()" style="width:28px;height:28px;padding:0;border-radius:50%;">✕</button>
+  </div>
+  <div id="m-leave" class="m-form">
+    <div class="field"><label>Teacher on leave</label><select id="m-l-teacher" class="inp"></select></div>
+    <div class="field"><label>Absent day(s) — Ctrl/Cmd for multiple</label><select id="m-l-days" class="inp" multiple size="4"></select></div>
+    <div class="field"><label>Replacement / Substitute</label><input id="m-l-repl" class="inp" placeholder="e.g. Prof. Backup"/></div>
+    <div style="background:var(--grn-bg);border:1px solid var(--grn-bd);border-radius:9px;padding:11px;">
+      <p style="font-size:12px;color:var(--grn);line-height:1.6;">✦ All slots of this teacher on selected days will be reassigned to the substitute automatically.</p>
+    </div>
+    <button class="btn btn-ton btn-full" onclick="submitUpdate('leave')">Apply Leave &amp; Auto-Assign</button>
+  </div>
+  <div id="m-holiday" class="m-form">
+    <div class="field"><label>Day(s) to mark as holiday — Ctrl/Cmd for multiple</label><select id="m-h-days" class="inp" multiple size="4"></select></div>
+    <button class="btn btn-amb btn-full" onclick="submitUpdate('holiday')">🏖 Mark as Holiday</button>
+  </div>
+  <div id="m-extra" class="m-form">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
+      <div class="field"><label>Subject / Session</label><input id="m-e-subj"    class="inp" placeholder="e.g. Remedial Math"/></div>
+      <div class="field"><label>Teacher / Host</label>  <input id="m-e-teacher" class="inp" placeholder="e.g. Prof. Gupta"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
+      <div class="field"><label>Day</label><select id="m-e-day" class="inp"></select></div>
+      <div class="field"><label>Preferred slot</label><select id="m-e-slot" class="inp"></select></div>
+    </div>
+    <button class="btn btn-tl btn-full" onclick="submitUpdate('extra')">⚡ Add Extra Session</button>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+<script src="/static/script.js"></script>
+</body>
+</html>
