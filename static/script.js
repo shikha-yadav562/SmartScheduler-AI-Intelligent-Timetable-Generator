@@ -1,13 +1,31 @@
+
+
+
 /**
  * SmartSchedule AI — OR-Tools CP-SAT Edition
  * All fields always visible — no hidden rows, no display:none toggles
  */
 "use strict";
 
-const S = {
-  type:"college", subjects:[], timetable:null, config:null,
-  chatHist:[], nextId:1,
+/** * TOP OF FILE: System-Level Theme Injection 
+ */
+// 🛡️ SHIELD: Hide the page immediately
+document.documentElement.style.visibility = 'hidden';
+
+(function syncTheme() {
+    const saved = localStorage.getItem("ss-theme") || "light";
+    document.documentElement.dataset.theme = saved;
+})();
+
+let S = {
+  type: "college", 
+  subjects: [], 
+  timetable: null, 
+  config: null,
+  chatHist: [], 
+  nextId: 1,
 };
+
 const PALETTE = [
   "#4f46e5","#0891b2","#dc2626","#059669","#d97706",
   "#7c3aed","#0284c7","#db2777","#16a34a","#9333ea",
@@ -15,26 +33,79 @@ const PALETTE = [
 ];
 
 // ── Theme ──────────────────────────────────────────────────────────────────────
-function setTheme(t){
-  document.documentElement.dataset.theme=t;
-  localStorage.setItem("ss-theme",t);
-  document.getElementById("tbl").classList.toggle("on",t==="light");
-  document.getElementById("tbd").classList.toggle("on",t==="dark");
+
+function saveToBrowser() {
+    localStorage.setItem("ss_app_state", JSON.stringify(S));
 }
-(function(){
-  const s=localStorage.getItem("ss-theme")||"light";
-  document.documentElement.dataset.theme=s;
-  document.getElementById("tbl").classList.toggle("on",s==="light");
-  document.getElementById("tbd").classList.toggle("on",s==="dark");
-})();
+
+function loadFromBrowser() {
+    const saved = localStorage.getItem("ss_app_state");
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge saved data into S
+        Object.assign(S, parsed);
+        
+        // Re-render subjects so they appear on refresh
+        const list = document.getElementById("subj-list");
+        list.innerHTML = ""; // Clear defaults
+        S.subjects.forEach(s => {
+            const el = document.createElement("div");
+            el.id = `sc-${s.id}`; 
+            el.className = "subj-card fadeup";
+            el.innerHTML = buildCardHTML(s);
+            list.appendChild(el);
+            attachCardEvents(el, s.id);
+        });
+        
+        // Restore timetable if it exists
+        if (S.timetable) {
+            renderTT(S.timetable, S.config, "Restored from session.", "");
+            enableActs(true);
+        }
+        syncCount();
+
+        document.documentElement.dataset.theme = S.theme || "light";
+    }
+}
+
+function attachCardEvents(el, id) {
+    el.querySelectorAll("input, select").forEach(i => {
+        i.addEventListener("change", () => syncCard(id));
+        i.addEventListener("input", () => syncCard(id));
+        // Also save to browser whenever an input changes
+        i.addEventListener("change", saveToBrowser); 
+    });
+}
+
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem("ss-theme", t);
+  if (S) S.theme = t; // Sync with state
+  saveToBrowser();
+}
 
 // ── Init ───────────────────────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded",()=>{
-  document.querySelectorAll(".day-chip").forEach(c=>c.addEventListener("click",()=>c.classList.toggle("on")));
-  loadPresets("college");
-  addBub("ai","👋 Hi! I use **Google OR-Tools CP-SAT** — a professional constraint solver — to generate your timetable. All fields are always visible. Fill in your subjects and hit **Generate Timetable**!");
-});
+// ── Init: The Traffic Controller ──
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Load from Browser first
+    loadFromBrowser();
 
+    // 2. ONLY if no subjects exist in memory, load the defaults
+    if (S.subjects.length === 0) {
+        console.log("Memory empty, loading presets...");
+        loadPresets(S.type || "college");
+    } else {
+        console.log("Memory found, subjects restored.");
+    }
+
+    // 3. Setup UI listeners
+    document.querySelectorAll(".day-chip").forEach(c => 
+        c.addEventListener("click", () => c.classList.toggle("on"))
+    );
+    
+    // 4. Show the page (if you used the 'hidden' shield)
+    document.documentElement.style.visibility = 'visible';
+});
 // ── Tabs ───────────────────────────────────────────────────────────────────────
 function switchTab(t){
   document.getElementById("pane-setup").style.display=t==="setup"?"flex":"none";
@@ -111,6 +182,7 @@ function addCard(data={}){
     i.addEventListener("input", ()=>syncCard(id));
   });
   syncCount();
+  saveToBrowser();
 }
 
 // ── Build card HTML — ALL FIELDS RENDERED, NOTHING HIDDEN ─────────────────────
@@ -253,10 +325,17 @@ function syncCard(id){
   s.notes          = el.querySelector(".sc-notes")?.value.trim()    || "";
 }
 
-function removeSubj(id){
-  S.subjects=S.subjects.filter(s=>s.id!==id);
-  const el=document.getElementById(`sc-${id}`);
-  if(el){ el.style.transition="opacity .18s,transform .18s"; el.style.opacity="0"; el.style.transform="translateX(-8px)"; setTimeout(()=>el.remove(),200); }
+function removeSubj(id) {
+  S.subjects = S.subjects.filter(s => s.id !== id);
+  const el = document.getElementById(`sc-${id}`);
+  if (el) { 
+      el.style.opacity = "0"; 
+      el.style.transform = "translateX(-8px)"; 
+      setTimeout(() => {
+          el.remove();
+          saveToBrowser(); // CRITICAL: Save after deleting
+      }, 200); 
+  }
   syncCount();
 }
 

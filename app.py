@@ -13,12 +13,17 @@ OR-Tools CP-SAT enforces:
 import os, random, copy, io, re
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template, session, send_file
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from ortools.sat.python import cp_model
 
 _BASE = os.path.dirname(os.path.abspath(__file__))
+
 app = Flask(__name__,
     static_folder=os.path.join(_BASE, "static"),
     template_folder=os.path.join(_BASE, "templates"))
-app.secret_key = os.environ.get("SECRET_KEY", "smartschedule-ortools-2024")
+app.secret_key = os.environ.get("SECRET_KEY", "smartschedule-ortools-2026")
+CORS(app)
 
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 OPENAI_KEY    = os.environ.get("OPENAI_API_KEY", "")
@@ -474,6 +479,7 @@ def presets():
 @app.route("/suggest",methods=["POST"])
 def suggest():
     data=request.get_json(silent=True) or {}
+    print(f"DEBUG: Data received from frontend! Role is: {data.get('type')}")
     stype=data.get("type","college")
     if ANTHROPIC_KEY or OPENAI_KEY:
         prompt=(f"Suggest 5-6 realistic {stype} subjects as JSON array. "
@@ -511,8 +517,17 @@ def generate():
 
     slot_dur=safe_int(data.get("slot_duration",60),60,lo=15,hi=180)
     brk_dur =safe_int(data.get("break_duration",60),60,lo=0,hi=180)
-    slots,breaks=generate_slots(data.get("start_time","09:00"),data.get("end_time","17:00"),
-                                slot_dur,data.get("break_start","13:00"),brk_dur)
+    # ── BACKEND LEAD: FORCE ROLE-BASED TIMES ──
+    role = data.get('type', 'college')
+    if role == 'college':
+        start_t, end_t = "07:30", "12:00"
+    else:
+        start_t = data.get("start_time", "09:00")
+        end_t = data.get("end_time", "17:00")
+
+    slots, breaks = generate_slots(start_t, end_t, 
+                                   slot_dur, data.get("break_start", "13:00"), brk_dur)
+    # ──────────────────────────────────────────
     config={"days":days,"time_slots":slots,"break_slots":list(breaks),
             "subjects":subjects,"slot_duration":slot_dur}
 

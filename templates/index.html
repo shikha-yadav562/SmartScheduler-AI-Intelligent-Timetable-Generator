@@ -273,6 +273,22 @@ input[type=number].inp::-webkit-inner-spin-button{-webkit-appearance:none;appear
 @media(max-width:860px){ #app{grid-template-columns:1fr;overflow-y:auto;}#lcol{border-right:none;border-bottom:1px solid var(--div);overflow:visible;}#rcol{overflow:visible;}}
 @media print{ #nav,#lcol,#toast,#conflict-panel,#modal-bg{display:none!important;}#app{position:static;display:block;}#rcol{overflow:visible;}body{background:white!important;}}
 </style>
+<script>
+  // ── THE INVISIBLE HANDSHAKE ──
+  // This runs BEFORE the browser draws a single pixel of the body.
+  (function() {
+    const savedState = localStorage.getItem("ss_app_state");
+    if (savedState) {
+        const parsed = JSON.parse(savedState);
+        // Set theme from the main app state
+        if (parsed.theme) document.documentElement.dataset.theme = parsed.theme;
+    } else {
+        // Fallback to the individual theme key if state is empty
+        const theme = localStorage.getItem("ss-theme") || "light";
+        document.documentElement.dataset.theme = theme;
+    }
+  })();
+</script>
 </head>
 <body>
 
