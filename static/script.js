@@ -305,38 +305,42 @@ function buildCardHTML(s){
   return h;
 }
 
-function syncCard(id){
-  const el=document.getElementById(`sc-${id}`); if(!el) return;
-  const s=S.subjects.find(x=>x.id===id); if(!s) return;
+function syncCard(id) {
+    const el = document.getElementById(`sc-${id}`); 
+    if (!el) return; // 🛡️ Safety check: if card is gone, stop here.
 
-  s.name           = el.querySelector(".sc-name")?.value.trim()    || "";
-  s.teacher        = el.querySelector(".sc-teacher")?.value.trim() || "";
-  s.hours_per_week = parseInt(el.querySelector(".sc-hours")?.value) || 3;
-  s.is_lab         = el.querySelector(".sc-lab")?.value === "true";
-  s.lab_duration   = parseInt(el.querySelector(".sc-lab-dur")?.value) || 2;
-  s.credits        = el.querySelector(".sc-credits")?.value         || "";
-  s.room           = el.querySelector(".sc-room")?.value.trim()     || "";
-  s.department     = el.querySelector(".sc-dept")?.value.trim()     || "";
-  s.class_group    = el.querySelector(".sc-cgroup")?.value.trim()   || "";
-  s.is_activity    = el.querySelector(".sc-activity")?.value === "true";
-  s.duration_mins  = el.querySelector(".sc-dur")?.value             || "";
-  s.session_type   = el.querySelector(".sc-mtype")?.value           || "";
-  s.location       = el.querySelector(".sc-room")?.value.trim()     || "";
-  s.notes          = el.querySelector(".sc-notes")?.value.trim()    || "";
+    const s = S.subjects.find(x => x.id === id); 
+    if (!s) return;
+
+    // Use optional chaining (?.) to prevent crashes if an input is missing
+    s.name           = el.querySelector(".sc-name")?.value.trim()     || "";
+    s.teacher        = el.querySelector(".sc-teacher")?.value.trim()  || "";
+    s.hours_per_week = parseInt(el.querySelector(".sc-hours")?.value) || 3;
+    s.is_lab         = el.querySelector(".sc-lab")?.value === "true";
+    s.lab_duration   = parseInt(el.querySelector(".sc-lab-dur")?.value) || 2;
+    s.credits        = el.querySelector(".sc-credits")?.value         || "";
+    s.room           = el.querySelector(".sc-room")?.value.trim()     || "";
+    s.notes          = el.querySelector(".sc-notes")?.value.trim()    || "";
+    
+    // Auto-save the state to local storage when values change
+    saveToBrowser();
 }
 
 function removeSubj(id) {
-  S.subjects = S.subjects.filter(s => s.id !== id);
-  const el = document.getElementById(`sc-${id}`);
-  if (el) { 
-      el.style.opacity = "0"; 
-      el.style.transform = "translateX(-8px)"; 
-      setTimeout(() => {
-          el.remove();
-          saveToBrowser(); // CRITICAL: Save after deleting
-      }, 200); 
-  }
-  syncCount();
+    // 1. Remove from data array IMMEDIATELY
+    S.subjects = S.subjects.filter(s => s.id !== id);
+    saveToBrowser(); // Save the new state without the deleted subject
+    
+    // 2. Visual Animation
+    const el = document.getElementById(`sc-${id}`);
+    if (el) { 
+        el.style.opacity = "0"; 
+        el.style.transform = "translateX(-8px)"; 
+        setTimeout(() => {
+            el.remove();
+            syncCount(); // Update the counter after removal
+        }, 200); 
+    }
 }
 
 function syncCount(){ document.getElementById("subj-count").textContent=S.subjects.length; }
@@ -357,10 +361,19 @@ async function aiSuggest(){
 }
 
 // ── Generate ───────────────────────────────────────────────────────────────────
-function getSubjects(){
-  S.subjects.forEach(s=>{const el=document.getElementById(`sc-${s.id}`);if(el)syncCard(s.id);});
-  return S.subjects.filter(s=>s.name.trim());
+function getSubjects() {
+    // Only try to sync cards that actually exist in the DOM right now
+    S.subjects.forEach(s => {
+        const el = document.getElementById(`sc-${s.id}`);
+        if (el) {
+            syncCard(s.id);
+        }
+    });
+
+    // Return only subjects that have a name (ignore empty/deleted ones)
+    return S.subjects.filter(s => s.name && s.name.trim() !== "");
 }
+
 function getSettings(){
   return{
     start_time:    document.getElementById("s-start").value,
